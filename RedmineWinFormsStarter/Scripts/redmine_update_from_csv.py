@@ -6,17 +6,17 @@
 改善点（今回）
 - カスタムフィールドが複数選択(multiple=true)の場合、CSVの値を分割して配列として送信
   例: "A, B" → ["A","B"]
-- ユーザー型（担当者/レビュアー/承認者 等）カスタムフィールドが複数選択の場合、
+- ユーザー型カスタムフィールドが複数選択の場合、
   プロジェクトメンバー(memberships)から name→id 変換し、配列のIDとして送信
-  例: "中町亮介, 神長伸一" → [<id_of_中町>, <id_of_神長>]
+  例: "User A, User B" → [<id_of_user_a>, <id_of_user_b>]
 
 既存の改善点（前回まで）
 - 日付(開始日/期日)を YYYY/MM/DD → YYYY-MM-DD に正規化して送信
 - /users.json を使わず memberships を用いて担当者/ユーザー型CFを解決
 
 注意
-- Redmine公式ドキュメント上、/custom_fields.json は管理者権限が必要な場合があります。citeturn19search66
-  本スクリプトは取得できない場合でも動作します（その場合、CFの複数選択判定は文字列ヒューリスティック）。
+- Redmine公式ドキュメント上、/custom_fields.json は管理者権限が必要な場合があります。
+  本スクリプトは取得できない場合でも動作しますが、その場合はカスタムフィールド更新を自動解決できません。
 """
 
 from __future__ import annotations
@@ -243,20 +243,12 @@ def ensure_project_categories(base_url: str, api_key: str, lookup: Lookup, proje
             lookup.category_by_project_and_name[(project_identifier, strip_(x.get('name')))] = int(x.get('id'))
 
 
-def is_user_like_field(name: str, field_format: str) -> bool:
-    # field_format が user なら確実。それ以外は名称ヒューリスティック。
-    if field_format == 'user':
-        return True
-    keys = ('レビュアー', '承認者', '担当', '責任者', '副担当')
-    return any(k in name for k in keys)
+def is_user_field(field_format: str) -> bool:
+    return field_format == 'user'
 
 
-def cf_multiple_hint(cfdef: Optional[CustomFieldDef], raw_value: str) -> bool:
-    # 定義が取れたらそれを優先。取れない場合は区切りが含まれるかで推測。
-    if cfdef is not None:
-        return cfdef.multiple
-    s = strip_(raw_value)
-    return any(sep in s for sep in [',','、','，',';','；'])
+def cf_multiple_hint(cfdef: Optional[CustomFieldDef]) -> bool:
+    return bool(cfdef and cfdef.multiple)
 
 
 def make_payload(row: Dict[str,str], lookup: Lookup, base_url: str, api_key: str, ignore_version: bool, warn: List[str]) -> Dict[str,Any]:
@@ -360,8 +352,8 @@ def make_payload(row: Dict[str,str], lookup: Lookup, base_url: str, api_key: str
             # 定義が取れない場合は名前一致しない可能性があるためスキップ
             continue
 
-        multiple = cf_multiple_hint(cfdef, vv_raw)
-        is_user = is_user_like_field(cfdef.name, cfdef.field_format)
+        multiple = cf_multiple_hint(cfdef)
+        is_user = is_user_field(cfdef.field_format)
 
         if is_user:
             if pinfo is None:

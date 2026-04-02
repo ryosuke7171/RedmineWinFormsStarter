@@ -14,7 +14,7 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 
 $ConfigPath = Join-Path $PSScriptRoot 'gui_config.json'
 
-function New-DefaultConfig { @{ apiKey=''; baseUrl='http://10.236.196.40:9080/redmine'; lastCsv='' } }
+function New-DefaultConfig { @{ apiKey=''; baseUrl=''; lastCsv='' } }
 
 function LoadConfig {
   $cfg = New-DefaultConfig
@@ -149,7 +149,7 @@ function CleanupProcess {
 $cfg = LoadConfig
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text='Redmine Ticket Tool (Full GUI)'
+$form.Text='Redmine CSV Tool'
 $form.Size = New-Object System.Drawing.Size(1280,860)
 $form.StartPosition='CenterScreen'
 
