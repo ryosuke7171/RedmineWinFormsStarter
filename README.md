@@ -2,6 +2,8 @@
 
 `RedmineWinFormsStarter` は、Redmine のチケット CSV を読み込み、内容確認、編集、コメント確認、チケット新規追加を行うための WinForms アプリです。
 
+**`使用する際は「RedmineWinFormsStarter\bin\Release」のReleaseフォルダをダウンロードし、RedmineWinFormsStarter.exeを起動してください。`**
+
 ## 連携タグ
 
 README と実コードの対応を追いやすくするため、以下の連携タグを使います。
